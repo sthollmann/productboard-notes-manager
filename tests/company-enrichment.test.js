@@ -12,8 +12,12 @@ describe('Company Enrichment Tests', () => {
   beforeAll(() => {
     // Clean up changes file before all tests
     const changesFile = path.join(__dirname, '..', 'local_changes.json');
-    if (fs.existsSync(changesFile)) {
-      fs.unlinkSync(changesFile);
+    try {
+      if (fs.existsSync(changesFile)) {
+        fs.unlinkSync(changesFile);
+      }
+    } catch (error) {
+      // Ignore cleanup errors
     }
   });
 
@@ -28,8 +32,12 @@ describe('Company Enrichment Tests', () => {
   afterAll(() => {
     // Clean up after all tests
     const changesFile = path.join(__dirname, '..', 'local_changes.json');
-    if (fs.existsSync(changesFile)) {
-      fs.unlinkSync(changesFile);
+    try {
+      if (fs.existsSync(changesFile)) {
+        fs.unlinkSync(changesFile);
+      }
+    } catch (error) {
+      // Ignore cleanup errors
     }
   });
 

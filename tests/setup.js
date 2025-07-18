@@ -25,11 +25,15 @@ afterEach(() => {
   const changesFile = path.join(__dirname, '..', 'local_changes.json');
   const testChangesFile = path.join(__dirname, '..', 'test_local_changes.json');
   
-  if (fs.existsSync(changesFile)) {
-    fs.unlinkSync(changesFile);
-  }
-  if (fs.existsSync(testChangesFile)) {
-    fs.unlinkSync(testChangesFile);
+  try {
+    if (fs.existsSync(changesFile)) {
+      fs.unlinkSync(changesFile);
+    }
+    if (fs.existsSync(testChangesFile)) {
+      fs.unlinkSync(testChangesFile);
+    }
+  } catch (error) {
+    // Ignore cleanup errors in test environment
   }
 });
 
