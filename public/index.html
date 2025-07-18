@@ -310,6 +310,20 @@
         let currentNotes = [];
         let currentChanges = [];
         
+        function getCompanyName(company) {
+            if (!company) return '-';
+            
+            if (typeof company === 'string') {
+                return company;
+            }
+            
+            if (typeof company === 'object') {
+                return company.name || company.displayName || company.title || '-';
+            }
+            
+            return '-';
+        }
+        
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -346,7 +360,7 @@
             
             const tableRows = currentNotes.map(note => `
                 <tr>
-                    <td>${note.company || '-'}</td>
+                    <td>${getCompanyName(note.company)}</td>
                     <td>${note.title || 'Untitled'}</td>
                     <td>${note.source || '-'}</td>
                     <td>${note.user?.email || '-'}</td>
