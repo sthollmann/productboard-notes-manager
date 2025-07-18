@@ -20,7 +20,7 @@ A Node.js application for managing Productboard Notes with local change tracking
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/[YOUR_USERNAME]/productboard-notes-manager.git
+git clone https://github.com/sthollmann/productboard-notes-manager.git
 cd productboard-notes-manager
 ```
 
