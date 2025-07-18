@@ -42,12 +42,64 @@ app.get('/', (req, res) => {
 app.get('/api/notes', async (req, res) => {
   try {
     const response = await apiClient.get('/notes');
+    
+    // Enrich notes with company information
+    if (response.data && response.data.data && response.data.data.length > 0) {
+      const enrichedNotes = await enrichNotesWithCompanyNames(response.data.data);
+      response.data.data = enrichedNotes;
+    }
+    
     res.json(response.data);
   } catch (error) {
     console.error('Error fetching notes:', error.response?.data || error.message);
     res.status(500).json({ error: 'Failed to fetch notes from Productboard API' });
   }
 });
+
+async function enrichNotesWithCompanyNames(notes) {
+  // Extract unique company IDs
+  const companyIds = new Set();
+  notes.forEach(note => {
+    if (note.company && note.company.id) {
+      companyIds.add(note.company.id);
+    }
+  });
+  
+  // Fetch company details for all unique IDs
+  const companyCache = {};
+  const companyPromises = Array.from(companyIds).map(async (companyId) => {
+    try {
+      const companyResponse = await apiClient.get(`/companies/${companyId}`);
+      companyCache[companyId] = companyResponse.data.data;
+    } catch (error) {
+      console.error(`Error fetching company ${companyId}:`, error.response?.data || error.message);
+      // Keep the original company object if fetching fails
+      companyCache[companyId] = null;
+    }
+  });
+  
+  // Wait for all company requests to complete
+  await Promise.all(companyPromises);
+  
+  // Enrich notes with company information
+  const enrichedNotes = notes.map(note => {
+    if (note.company && note.company.id && companyCache[note.company.id]) {
+      const companyData = companyCache[note.company.id];
+      return {
+        ...note,
+        company: {
+          id: note.company.id,
+          name: companyData.name,
+          domain: companyData.domain,
+          description: companyData.description
+        }
+      };
+    }
+    return note;
+  });
+  
+  return enrichedNotes;
+}
 
 app.post('/api/notes', async (req, res) => {
   try {
