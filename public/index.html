@@ -120,13 +120,6 @@
             min-height: 100px;
         }
         
-        .create-note-form {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
         
         .changes-list {
             background: white;
@@ -174,6 +167,30 @@
         .change-type.delete {
             background-color: #e74c3c;
             color: white;
+        }
+        
+        .change-type.tag_add {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .change-type.tag_remove {
+            background-color: #e67e22;
+            color: white;
+        }
+        
+        .change-description {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+        
+        .change-timestamp {
+            font-style: italic;
+        }
+        
+        .note-id {
+            color: #666;
+            font-size: 0.9em;
         }
         
         .loading {
@@ -348,6 +365,129 @@
             text-align: center;
         }
         
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+        }
+        
+        .close:hover {
+            color: #333;
+        }
+        
+        .modal form {
+            padding: 20px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        input[readonly] {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+        
+        .tags-display {
+            min-height: 40px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: flex-start;
+        }
+        
+        .tags-display .tag {
+            position: relative;
+            padding-right: 20px;
+            cursor: pointer;
+        }
+        
+        .tags-display .tag:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .tags-display .tag::after {
+            content: "×";
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.7;
+            font-weight: bold;
+        }
+        
+        .tags-display .tag:hover::after {
+            opacity: 1;
+        }
+        
+        .tags-display:empty::before {
+            content: "No tags assigned";
+            color: #666;
+            font-style: italic;
+        }
+        
+        .form-text {
+            display: block;
+            margin-top: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+        
     </style>
 </head>
 <body>
@@ -356,7 +496,6 @@
         
         <div class="tabs">
             <button class="tab active" onclick="showTab('notes')">Notes</button>
-            <button class="tab" onclick="showTab('create')">Create Note</button>
             <button class="tab" onclick="showTab('changes')">Local Changes</button>
         </div>
         
@@ -366,31 +505,34 @@
             </div>
         </div>
         
-        <div id="create-tab" class="tab-content">
-            <div class="create-note-form">
-                <h2>Create New Note</h2>
-                <form id="create-note-form">
+        <div id="edit-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Edit Note</h2>
+                    <span class="close" onclick="closeEditModal()">&times;</span>
+                </div>
+                <form id="edit-note-form">
+                    <input type="hidden" id="edit-note-id">
                     <div class="form-group">
-                        <label for="note-title">Title</label>
-                        <input type="text" id="note-title" name="title" required>
+                        <label for="edit-note-title">Title</label>
+                        <input type="text" id="edit-note-title" name="title" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="note-content">Content</label>
-                        <textarea id="note-content" name="content" required></textarea>
+                        <label for="edit-note-tags">Tags</label>
+                        <div id="edit-tags-display" class="tags-display"></div>
+                        <input type="text" id="edit-note-tags" name="tags" placeholder="Enter tags separated by commas">
+                        <small class="form-text">Enter tags separated by commas, then press Enter or Tab to add them</small>
                     </div>
                     <div class="form-group">
-                        <label for="note-email">User Email</label>
-                        <input type="email" id="note-email" name="email">
+                        <label for="edit-note-owner">Owner</label>
+                        <select id="edit-note-owner" name="owner">
+                            <option value="">No owner assigned</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label for="note-company">Company</label>
-                        <input type="text" id="note-company" name="company">
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
                     </div>
-                    <div class="form-group">
-                        <label for="note-tags">Tags (comma-separated)</label>
-                        <input type="text" id="note-tags" name="tags">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Create Note</button>
                 </form>
             </div>
         </div>
@@ -589,6 +731,58 @@
             }
         }
         
+        function getChangeDescription(change) {
+            const noteTitle = change.originalData?.title || change.updatedData?.title || 'Unknown Note';
+            const noteId = change.remoteId;
+            
+            switch (change.type) {
+                case 'create':
+                    return `Created note "${noteTitle}"`;
+                
+                case 'delete':
+                    return `Deleted note "${noteTitle}"`;
+                
+                case 'update':
+                    const changes = [];
+                    
+                    // Check for owner changes
+                    const oldOwner = change.originalData?.owner;
+                    const newOwner = change.data?.owner;
+                    if (JSON.stringify(oldOwner) !== JSON.stringify(newOwner)) {
+                        const oldOwnerName = oldOwner ? (oldOwner.name || oldOwner.email || 'Unknown') : 'No owner';
+                        const newOwnerName = newOwner ? (newOwner.name || newOwner.email || 'Unknown') : 'No owner';
+                        changes.push(`Owner: ${oldOwnerName} → ${newOwnerName}`);
+                    }
+                    
+                    // Check for tag changes
+                    const oldTags = change.originalData?.tags || [];
+                    const newTags = change.data?.tags || [];
+                    if (JSON.stringify(oldTags.sort()) !== JSON.stringify(newTags.sort())) {
+                        const addedTags = newTags.filter(tag => !oldTags.includes(tag));
+                        const removedTags = oldTags.filter(tag => !newTags.includes(tag));
+                        
+                        if (addedTags.length > 0) {
+                            changes.push(`Added tags: ${addedTags.join(', ')}`);
+                        }
+                        if (removedTags.length > 0) {
+                            changes.push(`Removed tags: ${removedTags.join(', ')}`);
+                        }
+                    }
+                    
+                    const description = changes.length > 0 ? changes.join('; ') : 'Updated note';
+                    return `"${noteTitle}": ${description}`;
+                
+                case 'tag_add':
+                    return `Added tag "${change.data.tagName}" to "${noteTitle}"`;
+                
+                case 'tag_remove':
+                    return `Removed tag "${change.data.tagName}" from "${noteTitle}"`;
+                
+                default:
+                    return `${change.type} operation on "${noteTitle}"`;
+            }
+        }
+        
         function renderChanges() {
             const container = document.getElementById('changes-container');
             
@@ -601,9 +795,13 @@
                 <div class="change-item">
                     <div class="change-info">
                         <span class="change-type ${change.type}">${change.type}</span>
-                        <strong>${change.data?.title || 'Note'}</strong>
-                        <br>
-                        <small>${new Date(change.timestamp).toLocaleString()}</small>
+                        <div class="change-description">
+                            <strong>${getChangeDescription(change)}</strong>
+                        </div>
+                        <small class="change-timestamp">
+                            ${new Date(change.timestamp).toLocaleString()}
+                            <span class="note-id">(Note ID: ${change.remoteId})</span>
+                        </small>
                     </div>
                     <button class="btn btn-warning" onclick="rollbackChange('${change.id}')">Rollback</button>
                 </div>
@@ -659,17 +857,155 @@
             }
         }
         
+        let currentEditTags = [];
+        let currentEditNoteId = null;
+        
         function editNote(noteId) {
             const note = currentNotes.find(n => n.id === noteId);
             if (!note) return;
             
-            document.getElementById('note-title').value = note.title || '';
-            document.getElementById('note-content').value = note.content || '';
-            document.getElementById('note-email').value = note.user?.email || '';
-            document.getElementById('note-company').value = note.company || '';
-            document.getElementById('note-tags').value = note.tags?.join(', ') || '';
+            currentEditNoteId = noteId;
+            document.getElementById('edit-note-id').value = noteId;
+            document.getElementById('edit-note-title').value = note.title || 'Untitled';
             
-            showTab('create');
+            // Initialize tags
+            currentEditTags = note.tags ? [...note.tags] : [];
+            updateTagsDisplay();
+            document.getElementById('edit-note-tags').value = '';
+            
+            // Load owner options and set current owner
+            loadOwnerOptions(note.owner?.id || '');
+            
+            // Set up tag input event listeners
+            setupTagInputListeners();
+            
+            // Show the modal
+            document.getElementById('edit-modal').style.display = 'block';
+        }
+        
+        function updateTagsDisplay() {
+            const tagsDisplay = document.getElementById('edit-tags-display');
+            
+            if (currentEditTags.length === 0) {
+                tagsDisplay.innerHTML = '';
+                return;
+            }
+            
+            tagsDisplay.innerHTML = currentEditTags.map(tag => 
+                `<span class="tag" onclick="removeTag('${tag}')">${tag}</span>`
+            ).join('');
+        }
+        
+        async function removeTag(tagToRemove) {
+            if (!currentEditNoteId) return;
+            
+            try {
+                const response = await fetch(`/api/notes/${currentEditNoteId}/tags/${encodeURIComponent(tagToRemove)}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    // Remove from local array and update display
+                    currentEditTags = currentEditTags.filter(tag => tag !== tagToRemove);
+                    updateTagsDisplay();
+                    showMessage(`Tag "${tagToRemove}" removed successfully`, 'success');
+                } else {
+                    const error = await response.json();
+                    showMessage('Error removing tag: ' + error.error, 'error');
+                }
+            } catch (error) {
+                showMessage('Error removing tag: ' + error.message, 'error');
+            }
+        }
+        
+        async function addTagFromInput() {
+            const input = document.getElementById('edit-note-tags');
+            const value = input.value.trim();
+            
+            if (!value || !currentEditNoteId) return;
+            
+            // Split by comma and add each tag
+            const newTags = value.split(',').map(tag => tag.trim()).filter(tag => tag && !currentEditTags.includes(tag));
+            
+            for (const tagName of newTags) {
+                try {
+                    const response = await fetch(`/api/notes/${currentEditNoteId}/tags/${encodeURIComponent(tagName)}`, {
+                        method: 'POST'
+                    });
+                    
+                    if (response.ok) {
+                        // Add to local array and update display
+                        currentEditTags.push(tagName);
+                        updateTagsDisplay();
+                        showMessage(`Tag "${tagName}" added successfully`, 'success');
+                    } else {
+                        const error = await response.json();
+                        showMessage('Error adding tag: ' + error.error, 'error');
+                    }
+                } catch (error) {
+                    showMessage('Error adding tag: ' + error.message, 'error');
+                }
+            }
+            
+            input.value = '';
+        }
+        
+        function closeEditModal() {
+            document.getElementById('edit-modal').style.display = 'none';
+        }
+        
+        async function loadOwnerOptions(currentOwnerId = '') {
+            const ownerSelect = document.getElementById('edit-note-owner');
+            
+            // Clear existing options
+            ownerSelect.innerHTML = '<option value="">No owner assigned</option>';
+            
+            try {
+                // For now, we'll add some placeholder users
+                // TODO: Replace with actual API call to get users
+                const users = [
+                    { id: 'user1', name: 'Product Manager', email: 'pm@company.com' },
+                    { id: 'user2', name: 'Customer Success', email: 'cs@company.com' },
+                    { id: 'user3', name: 'Engineering Lead', email: 'eng@company.com' }
+                ];
+                
+                users.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = `${user.name} (${user.email})`;
+                    if (user.id === currentOwnerId) {
+                        option.selected = true;
+                    }
+                    ownerSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading owner options:', error);
+            }
+        }
+        
+        // Set up tag input event listeners
+        function setupTagInputListeners() {
+            const tagInput = document.getElementById('edit-note-tags');
+            if (tagInput) {
+                // Remove existing listeners to avoid duplicates
+                tagInput.removeEventListener('keydown', handleTagInputKeydown);
+                tagInput.removeEventListener('blur', handleTagInputBlur);
+                
+                // Add new listeners
+                tagInput.addEventListener('keydown', handleTagInputKeydown);
+                tagInput.addEventListener('blur', handleTagInputBlur);
+            }
+        }
+        
+        function handleTagInputKeydown(e) {
+            if (e.key === 'Enter' || e.key === 'Tab') {
+                e.preventDefault();
+                addTagFromInput();
+            }
+        }
+        
+        function handleTagInputBlur() {
+            addTagFromInput();
         }
         
         function showMessage(message, type) {
@@ -685,43 +1021,59 @@
             }, 5000);
         }
         
-        document.getElementById('create-note-form').addEventListener('submit', async (e) => {
+        document.getElementById('edit-note-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const formData = new FormData(e.target);
-            const noteData = {
-                title: formData.get('title'),
-                content: formData.get('content'),
-                user: {
-                    email: formData.get('email')
-                },
-                company: formData.get('company'),
-                tags: formData.get('tags').split(',').map(tag => tag.trim()).filter(Boolean)
-            };
+            const noteId = document.getElementById('edit-note-id').value;
             
-            try {
-                const response = await fetch('/api/notes', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(noteData)
-                });
+            // Add any remaining text in the input as tags first
+            await addTagFromInput();
+            
+            // Check if owner needs to be updated
+            const currentNote = currentNotes.find(n => n.id === noteId);
+            const selectedOwnerId = document.getElementById('edit-note-owner').value;
+            const currentOwnerId = currentNote?.owner?.id || '';
+            
+            if (selectedOwnerId !== currentOwnerId) {
+                // Only update owner if it has changed
+                const updateData = {
+                    owner: selectedOwnerId ? { id: selectedOwnerId } : null
+                };
                 
-                if (response.ok) {
-                    showMessage('Note created successfully', 'success');
-                    e.target.reset();
-                    if (document.getElementById('notes-tab').classList.contains('active')) {
-                        loadNotes();
+                try {
+                    const response = await fetch(`/api/notes/${noteId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updateData)
+                    });
+                    
+                    if (response.ok) {
+                        showMessage('Owner updated successfully', 'success');
+                    } else {
+                        const error = await response.json();
+                        showMessage('Error updating owner: ' + error.error, 'error');
+                        return; // Don't close modal on error
                     }
-                } else {
-                    const error = await response.json();
-                    showMessage('Error creating note: ' + error.error, 'error');
+                } catch (error) {
+                    showMessage('Error updating owner: ' + error.message, 'error');
+                    return; // Don't close modal on error
                 }
-            } catch (error) {
-                showMessage('Error creating note: ' + error.message, 'error');
             }
+            
+            // Close modal and refresh
+            closeEditModal();
+            loadNotes();
         });
+        
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('edit-modal');
+            if (event.target === modal) {
+                closeEditModal();
+            }
+        };
         
         loadNotes();
     </script>
