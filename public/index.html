@@ -324,6 +324,25 @@
             return '-';
         }
         
+        function getSourceName(source) {
+            if (!source) return '-';
+            
+            if (typeof source === 'string') {
+                return source;
+            }
+            
+            if (typeof source === 'object') {
+                // Handle the common Productboard API format: { origin: "email", record_id: null }
+                if (source.origin) {
+                    return source.origin;
+                }
+                // Fallback for other potential properties
+                return source.name || source.type || source.displayName || '-';
+            }
+            
+            return '-';
+        }
+        
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -362,7 +381,7 @@
                 <tr>
                     <td>${getCompanyName(note.company)}</td>
                     <td>${note.title || 'Untitled'}</td>
-                    <td>${note.source || '-'}</td>
+                    <td>${getSourceName(note.source)}</td>
                     <td>${note.user?.email || '-'}</td>
                     <td>
                         ${note.tags && note.tags.length > 0 
