@@ -24,15 +24,30 @@ const apiClient = axios.create({
 
 let localChanges = [];
 
+// Load existing local changes on startup
+const changesFilePath = path.join(__dirname, 'local_changes.json');
 try {
-  const changesData = fs.readFileSync(path.join(__dirname, 'local_changes.json'), 'utf8');
-  localChanges = JSON.parse(changesData);
+  if (fs.existsSync(changesFilePath)) {
+    const changesData = fs.readFileSync(changesFilePath, 'utf8');
+    localChanges = JSON.parse(changesData);
+    console.log(`Loaded ${localChanges.length} local changes from ${changesFilePath}`);
+  } else {
+    console.log('No existing local changes file found, starting with empty changes array');
+    localChanges = [];
+  }
 } catch (error) {
+  console.error('Error loading local changes:', error);
   localChanges = [];
 }
 
 function saveLocalChanges() {
-  fs.writeFileSync(path.join(__dirname, 'local_changes.json'), JSON.stringify(localChanges, null, 2));
+  try {
+    const filePath = path.join(__dirname, 'local_changes.json');
+    fs.writeFileSync(filePath, JSON.stringify(localChanges, null, 2));
+    console.log(`Saved ${localChanges.length} local changes to ${filePath}`);
+  } catch (error) {
+    console.error('Error saving local changes:', error);
+  }
 }
 
 app.get('/', (req, res) => {
@@ -181,6 +196,77 @@ app.delete('/api/notes/:id', async (req, res) => {
   }
 });
 
+// Tag-specific operations
+app.post('/api/notes/:id/tags/:tagName', async (req, res) => {
+  try {
+    const noteId = req.params.id;
+    const tagName = req.params.tagName;
+    
+    // Get the current note data for tracking
+    const originalResponse = await apiClient.get(`/notes/${noteId}`);
+    
+    // Add the tag using Productboard's tag-specific endpoint
+    const response = await apiClient.post(`/notes/${noteId}/tags/${encodeURIComponent(tagName)}`);
+    
+    // Get the updated note data
+    const updatedResponse = await apiClient.get(`/notes/${noteId}`);
+    
+    // Track the change
+    const change = {
+      id: Date.now().toString(),
+      type: 'tag_add',
+      timestamp: new Date().toISOString(),
+      remoteId: noteId,
+      data: { tagName: tagName },
+      originalData: originalResponse.data.data,
+      updatedData: updatedResponse.data.data
+    };
+    
+    localChanges.push(change);
+    saveLocalChanges();
+    
+    res.json(updatedResponse.data);
+  } catch (error) {
+    console.error('Error adding tag to note:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to add tag to note' });
+  }
+});
+
+app.delete('/api/notes/:id/tags/:tagName', async (req, res) => {
+  try {
+    const noteId = req.params.id;
+    const tagName = req.params.tagName;
+    
+    // Get the current note data for tracking
+    const originalResponse = await apiClient.get(`/notes/${noteId}`);
+    
+    // Remove the tag using Productboard's tag-specific endpoint
+    const response = await apiClient.delete(`/notes/${noteId}/tags/${encodeURIComponent(tagName)}`);
+    
+    // Get the updated note data
+    const updatedResponse = await apiClient.get(`/notes/${noteId}`);
+    
+    // Track the change
+    const change = {
+      id: Date.now().toString(),
+      type: 'tag_remove',
+      timestamp: new Date().toISOString(),
+      remoteId: noteId,
+      data: { tagName: tagName },
+      originalData: originalResponse.data.data,
+      updatedData: updatedResponse.data.data
+    };
+    
+    localChanges.push(change);
+    saveLocalChanges();
+    
+    res.json(updatedResponse.data);
+  } catch (error) {
+    console.error('Error removing tag from note:', error.response?.data || error.message);
+    res.status(500).json({ error: 'Failed to remove tag from note' });
+  }
+});
+
 app.get('/api/changes', (req, res) => {
   res.json(localChanges);
 });
@@ -205,6 +291,14 @@ app.post('/api/rollback/:changeId', async (req, res) => {
         break;
       case 'delete':
         rollbackResult = await apiClient.post('/notes', change.originalData);
+        break;
+      case 'tag_add':
+        // To rollback a tag addition, we need to remove the tag
+        rollbackResult = await apiClient.delete(`/notes/${change.remoteId}/tags/${encodeURIComponent(change.data.tagName)}`);
+        break;
+      case 'tag_remove':
+        // To rollback a tag removal, we need to add the tag back
+        rollbackResult = await apiClient.post(`/notes/${change.remoteId}/tags/${encodeURIComponent(change.data.tagName)}`);
         break;
     }
     
