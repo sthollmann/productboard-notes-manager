@@ -144,7 +144,10 @@ describe('Source Display Integration Tests', () => {
       // Check that the function handles icon generation
       expect(response.text).toContain('source-icon');
       expect(response.text).toContain('📧'); // email icon
-      expect(response.text).toContain('🏢'); // productboard icon
+      expect(response.text).toContain('company-logo'); // company logo class
+      expect(response.text).toContain('slack-new-logo.svg'); // Slack logo URL
+      expect(response.text).toContain('zendesk-1.svg'); // Zendesk logo URL
+      expect(response.text).toContain('productboard.svg'); // Productboard logo URL
       // Check that it's used in the table rendering
       expect(response.text).toContain('getSourceIcon(note.source)');
     });

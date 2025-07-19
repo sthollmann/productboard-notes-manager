@@ -314,6 +314,40 @@
             background-color: #e8f5e8;
         }
         
+        .company-logo {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .slack-icon .company-logo {
+            filter: none; /* Slack logo has good colors */
+        }
+        
+        .zendesk-icon .company-logo {
+            filter: none; /* Zendesk logo has good colors */
+        }
+        
+        .productboard-icon .company-logo {
+            filter: none; /* Productboard logo has good colors */
+        }
+        
+        /* Fallback for logo loading errors */
+        .company-logo:not([src]),
+        .company-logo[src=""] {
+            display: none;
+        }
+        
+        .company-logo:not([src])::after,
+        .company-logo[src=""]::after {
+            content: "🔗";
+            display: block;
+            font-size: 16px;
+            text-align: center;
+        }
+        
     </style>
 </head>
 <body>
@@ -429,9 +463,9 @@
                 case 'mobile':
                     return '<span class="source-icon mobile-icon" title="Mobile App">📱</span>';
                 case 'slack':
-                    return '<span class="source-icon slack-icon" title="Slack">💬</span>';
+                    return '<span class="source-icon slack-icon" title="Slack"><img src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg" alt="Slack" class="company-logo"></span>';
                 case 'zendesk':
-                    return '<span class="source-icon zendesk-icon" title="Zendesk">🎫</span>';
+                    return '<span class="source-icon zendesk-icon" title="Zendesk"><img src="https://cdn.worldvectorlogo.com/logos/zendesk-1.svg" alt="Zendesk" class="company-logo"></span>';
                 case 'intercom':
                     return '<span class="source-icon intercom-icon" title="Intercom">💭</span>';
                 case '-':
@@ -439,7 +473,7 @@
                 case undefined:
                 default:
                     // Productboard logo for notes with no source or unknown source
-                    return '<span class="source-icon productboard-icon" title="Productboard">🏢</span>';
+                    return '<span class="source-icon productboard-icon" title="Productboard"><img src="https://cdn.worldvectorlogo.com/logos/productboard.svg" alt="Productboard" class="company-logo"></span>';
             }
         }
         

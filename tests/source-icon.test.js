@@ -43,16 +43,16 @@ describe('Source Icon Tests', () => {
       case 'mobile':
         return '<span class="source-icon mobile-icon" title="Mobile App">📱</span>';
       case 'slack':
-        return '<span class="source-icon slack-icon" title="Slack">💬</span>';
+        return '<span class="source-icon slack-icon" title="Slack"><img src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg" alt="Slack" class="company-logo"></span>';
       case 'zendesk':
-        return '<span class="source-icon zendesk-icon" title="Zendesk">🎫</span>';
+        return '<span class="source-icon zendesk-icon" title="Zendesk"><img src="https://cdn.worldvectorlogo.com/logos/zendesk-1.svg" alt="Zendesk" class="company-logo"></span>';
       case 'intercom':
         return '<span class="source-icon intercom-icon" title="Intercom">💭</span>';
       case '-':
       case null:
       case undefined:
       default:
-        return '<span class="source-icon productboard-icon" title="Productboard">🏢</span>';
+        return '<span class="source-icon productboard-icon" title="Productboard"><img src="https://cdn.worldvectorlogo.com/logos/productboard.svg" alt="Productboard" class="company-logo"></span>';
     }
   };
 
@@ -121,20 +121,24 @@ describe('Source Icon Tests', () => {
       expect(result).toContain('title="Mobile App"');
     });
 
-    it('should return Slack icon for Slack source', () => {
+    it('should return Slack logo for Slack source', () => {
       const source = 'slack';
       const result = getSourceIcon(source);
-      expect(result).toContain('💬');
+      expect(result).toContain('<img src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg"');
+      expect(result).toContain('alt="Slack"');
       expect(result).toContain('slack-icon');
       expect(result).toContain('title="Slack"');
+      expect(result).toContain('company-logo');
     });
 
-    it('should return Zendesk icon for Zendesk source', () => {
+    it('should return Zendesk logo for Zendesk source', () => {
       const source = 'zendesk';
       const result = getSourceIcon(source);
-      expect(result).toContain('🎫');
+      expect(result).toContain('<img src="https://cdn.worldvectorlogo.com/logos/zendesk-1.svg"');
+      expect(result).toContain('alt="Zendesk"');
       expect(result).toContain('zendesk-icon');
       expect(result).toContain('title="Zendesk"');
+      expect(result).toContain('company-logo');
     });
 
     it('should return Intercom icon for Intercom source', () => {
@@ -147,42 +151,52 @@ describe('Source Icon Tests', () => {
   });
 
   describe('Default Productboard Icon for Unknown Sources', () => {
-    it('should return Productboard icon for null source', () => {
+    it('should return Productboard logo for null source', () => {
       const result = getSourceIcon(null);
-      expect(result).toContain('🏢');
+      expect(result).toContain('<img src="https://cdn.worldvectorlogo.com/logos/productboard.svg"');
+      expect(result).toContain('alt="Productboard"');
       expect(result).toContain('productboard-icon');
       expect(result).toContain('title="Productboard"');
+      expect(result).toContain('company-logo');
     });
 
-    it('should return Productboard icon for undefined source', () => {
+    it('should return Productboard logo for undefined source', () => {
       const result = getSourceIcon(undefined);
-      expect(result).toContain('🏢');
+      expect(result).toContain('<img src="https://cdn.worldvectorlogo.com/logos/productboard.svg"');
+      expect(result).toContain('alt="Productboard"');
       expect(result).toContain('productboard-icon');
       expect(result).toContain('title="Productboard"');
+      expect(result).toContain('company-logo');
     });
 
-    it('should return Productboard icon for unknown source type', () => {
+    it('should return Productboard logo for unknown source type', () => {
       const source = { origin: 'unknown-system', record_id: 'test' };
       const result = getSourceIcon(source);
-      expect(result).toContain('🏢');
+      expect(result).toContain('<img src="https://cdn.worldvectorlogo.com/logos/productboard.svg"');
+      expect(result).toContain('alt="Productboard"');
       expect(result).toContain('productboard-icon');
       expect(result).toContain('title="Productboard"');
+      expect(result).toContain('company-logo');
     });
 
-    it('should return Productboard icon for empty object', () => {
+    it('should return Productboard logo for empty object', () => {
       const source = {};
       const result = getSourceIcon(source);
-      expect(result).toContain('🏢');
+      expect(result).toContain('<img src="https://cdn.worldvectorlogo.com/logos/productboard.svg"');
+      expect(result).toContain('alt="Productboard"');
       expect(result).toContain('productboard-icon');
       expect(result).toContain('title="Productboard"');
+      expect(result).toContain('company-logo');
     });
 
-    it('should return Productboard icon for object with no recognized properties', () => {
+    it('should return Productboard logo for object with no recognized properties', () => {
       const source = { id: '123', category: 'system' };
       const result = getSourceIcon(source);
-      expect(result).toContain('🏢');
+      expect(result).toContain('<img src="https://cdn.worldvectorlogo.com/logos/productboard.svg"');
+      expect(result).toContain('alt="Productboard"');
       expect(result).toContain('productboard-icon');
       expect(result).toContain('title="Productboard"');
+      expect(result).toContain('company-logo');
     });
   });
 
@@ -285,9 +299,10 @@ describe('Source Icon Tests', () => {
       };
       
       const result = getSourceIcon(note.source);
-      expect(result).toContain('🏢');
+      expect(result).toContain('alt="Productboard"');
       expect(result).toContain('productboard-icon');
       expect(result).toContain('title="Productboard"');
+      expect(result).toContain('company-logo');
     });
 
     it('should handle mixed source types in batch processing', () => {
@@ -304,8 +319,8 @@ describe('Source Icon Tests', () => {
       expect(results[0]).toContain('📧'); // email
       expect(results[1]).toContain('🔗'); // api
       expect(results[2]).toContain('✏️'); // manual
-      expect(results[3]).toContain('🏢'); // null -> productboard
-      expect(results[4]).toContain('🏢'); // undefined -> productboard
+      expect(results[3]).toContain('alt="Productboard"'); // null -> productboard logo
+      expect(results[4]).toContain('alt="Productboard"'); // undefined -> productboard logo
     });
   });
 
@@ -321,7 +336,7 @@ describe('Source Icon Tests', () => {
 
       edgeCases.forEach(source => {
         const result = getSourceIcon(source);
-        expect(result).toContain('🏢'); // Should default to Productboard
+        expect(result).toContain('alt="Productboard"'); // Should default to Productboard logo
         expect(result).toContain('productboard-icon');
       });
     });
@@ -335,7 +350,7 @@ describe('Source Icon Tests', () => {
 
       sources.forEach(source => {
         const result = getSourceIcon(source);
-        expect(result).toContain('🏢'); // Should default to Productboard
+        expect(result).toContain('alt="Productboard"'); // Should default to Productboard logo
         expect(result).toContain('productboard-icon');
       });
     });
