@@ -133,6 +133,20 @@ describe('Source Display Integration Tests', () => {
       expect(response.status).toBe(200);
       expect(response.text).toContain('getSourceName');
       expect(response.text).toContain('function getSourceName(source)');
+      expect(response.text).toContain('getSourceIcon');
+      expect(response.text).toContain('function getSourceIcon(source)');
+    });
+
+    it('should contain getSourceIcon function for proper source icon display', async () => {
+      const response = await request(app).get('/');
+      
+      expect(response.status).toBe(200);
+      // Check that the function handles icon generation
+      expect(response.text).toContain('source-icon');
+      expect(response.text).toContain('📧'); // email icon
+      expect(response.text).toContain('🏢'); // productboard icon
+      // Check that it's used in the table rendering
+      expect(response.text).toContain('getSourceIcon(note.source)');
     });
 
     it('should contain getSourceName function for proper source display', async () => {
@@ -141,8 +155,8 @@ describe('Source Display Integration Tests', () => {
       expect(response.status).toBe(200);
       // Check that the function handles object sources
       expect(response.text).toContain('source.origin');
-      // Check that it's used in the table rendering
-      expect(response.text).toContain('getSourceName(note.source)');
+      // The table should now use getSourceIcon instead of getSourceName
+      expect(response.text).not.toContain('getSourceName(note.source)');
     });
   });
 
