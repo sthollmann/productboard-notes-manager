@@ -161,6 +161,19 @@ describe('Source Display Integration Tests', () => {
       // The table should now use getSourceIcon instead of getSourceName
       expect(response.text).not.toContain('getSourceName(note.source)');
     });
+
+    it('should contain getOwnerName function for proper owner display', async () => {
+      const response = await request(app).get('/');
+      
+      expect(response.status).toBe(200);
+      // Check that the function handles owner extraction
+      expect(response.text).toContain('getOwnerName');
+      expect(response.text).toContain('function getOwnerName(note)');
+      expect(response.text).toContain('note.owner');
+      expect(response.text).toContain('note.createdBy');
+      // Check that it's used in the table rendering
+      expect(response.text).toContain('getOwnerName(note)');
+    });
   });
 
   describe('Mixed Source Data Types', () => {

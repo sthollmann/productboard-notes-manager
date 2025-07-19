@@ -477,6 +477,33 @@
             }
         }
         
+        function getOwnerName(note) {
+            // First check if there's an assigned owner
+            if (note.owner && note.owner.name) {
+                return note.owner.name;
+            }
+            if (note.owner && note.owner.email) {
+                return note.owner.email;
+            }
+            
+            // If no owner, fall back to createdBy (the person who created the note)
+            if (note.createdBy) {
+                if (note.createdBy.name) {
+                    return note.createdBy.name;
+                }
+                if (note.createdBy.email) {
+                    return note.createdBy.email;
+                }
+            }
+            
+            // If no createdBy, try user with email (though user typically only has ID)
+            if (note.user && note.user.email) {
+                return note.user.email;
+            }
+            
+            return '-';
+        }
+        
         function showTab(tabName) {
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -516,7 +543,7 @@
                     <td>${getCompanyName(note.company)}</td>
                     <td>${note.title || 'Untitled'}</td>
                     <td>${getSourceIcon(note.source)}</td>
-                    <td>${note.user?.email || '-'}</td>
+                    <td>${getOwnerName(note)}</td>
                     <td>
                         ${note.tags && note.tags.length > 0 
                             ? note.tags.map(tag => `<span class="tag">${tag}</span>`).join('')
